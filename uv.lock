@@ -3,6 +3,7 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
+    "cli",
     "coreutils-lib",
     "setup-lib",
     "transmission-lib",
@@ -70,6 +71,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/27/f2/4f9a69cc7712b9b5ad8fdb87039fd89abba997ad5cbe690d1835d40405b0/charset_normalizer-3.4.1-cp313-cp313-win_amd64.whl", hash = "sha256:b1ac5992a838106edb89654e0aebfc24f5848ae2547d22c2c3f66454daa11971", size = 102702 },
     { url = "https://files.pythonhosted.org/packages/0e/f6/65ecc6878a89bb1c23a086ea335ad4bf21a588990c3f535a227b9eea9108/charset_normalizer-3.4.1-py3-none-any.whl", hash = "sha256:d98b1668f06378c6dbefec3b92299716b931cd4e6061f3c875a71ced1780ab85", size = 49767 },
 ]
+
+[[package]]
+name = "cli"
+version = "0.1.0"
+source = { editable = "applications/cli" }
+dependencies = [
+    { name = "cyclopts" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cyclopts", specifier = ">=3.9.2" }]
 
 [[package]]
 name = "colorama"
@@ -603,6 +615,7 @@ name = "transmission-scripts"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "cli" },
     { name = "coreutils-lib" },
     { name = "cyclopts" },
     { name = "loguru" },
@@ -620,6 +633,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cli", editable = "applications/cli" },
     { name = "coreutils-lib", editable = "libs/coreutils-lib" },
     { name = "cyclopts", specifier = ">=3.9.2" },
     { name = "loguru", specifier = ">=0.7.3" },

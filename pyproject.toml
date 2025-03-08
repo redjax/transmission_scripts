@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cli",
     "coreutils-lib",
     "cyclopts>=3.9.2",
     "loguru>=0.7.3",
@@ -21,6 +22,7 @@ members = ["libs/*", "packages/*", "applications/*"]
 setup-lib = { workspace = true }
 coreutils-lib = { workspace = true }
 transmission-lib = { workspace = true }
+cli = { workspace = true }
 
 [dependency-groups]
 dev = ["nox>=2025.2.9", "ruff>=0.9.10"]
