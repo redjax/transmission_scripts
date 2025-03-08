@@ -12,10 +12,12 @@ def main(config_file: str = "configs/default.json"):
         log.error(f"Failed to test transmission connection. Details: {e}")
 
     try:
-        torrents = list_torrents(config_file=config_file, status="finished")
-        log.info(f"Got {len(torrents)} finished torrent(s) from host:\n{torrents}")
+        torrents = list_torrents(config_file=config_file, status="downloading")
+        log.info(
+            f"Got {len(torrents)} downloading torrent(s) from host:\n{[t.name for t in torrents]}"
+        )
     except Exception as e:
-        log.error(f"Failed to get finished torrent(s) from host. Details: {e}")
+        log.error(f"Failed to get downloading torrent(s) from host. Details: {e}")
         return []
 
 
