@@ -1,0 +1,24 @@
+[project]
+name = "transmission-scripts"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "coreutils-lib",
+    "cyclopts>=3.9.2",
+    "loguru>=0.7.3",
+    "msgpack>=1.1.0",
+    "setup-lib",
+    "transmission-rpc>=7.0.11",
+]
+
+[tool.uv.workspace]
+members = ["libs/*", "packages/*", "applications/*"]
+
+[tool.uv.sources]
+setup-lib = { workspace = true }
+coreutils-lib = { workspace = true }
+
+[dependency-groups]
+dev = ["nox>=2025.2.9", "ruff>=0.9.10"]
