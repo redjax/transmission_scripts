@@ -114,6 +114,9 @@ class TransmissionRPCController(AbstractContextManager):
         return self.client
 
     def get_all_torrents(self) -> list[Torrent]:
+        if self.client is None:
+            self.client = self._create_client()
+
         try:
             _torrents: list[Torrent] = self.client.get_torrents()
 
@@ -123,6 +126,54 @@ class TransmissionRPCController(AbstractContextManager):
             self.logger.error(msg)
 
             raise exc
+
+    def count_torrents(self, status: str = "all") -> int:
+        if self.client is None:
+            self.client = self._create_client()
+
+        try:
+            _torrents: list[Torrent] = self.client.get_torrents()
+        except Exception as exc:
+            msg = Exception(f"Unhandled exception getting all torrents. Details: {exc}")
+            self.logger.error(msg)
+
+            raise exc
+
+        if status == "all":
+            return len(_torrents)
+        else:
+            match status.lower():
+                case "check pending":
+                    pending_torrents = [
+                        t for t in _torrents if t.status == "check pending"
+                    ]
+                    return len(pending_torrents)
+                case "checking":
+                    checking_torrents = [t for t in _torrents if t.status == "checking"]
+                    return len(checking_torrents)
+                case "downloading":
+                    downloading_torrents = [
+                        t for t in _torrents if t.status == "downloading"
+                    ]
+                    return len(downloading_torrents)
+                case "download pending":
+                    download_pending_torrents = [
+                        t for t in _torrents if t.status == "download pending"
+                    ]
+                    return len(download_pending_torrents)
+                case "seeding":
+                    seeding_torrents = [t for t in _torrents if t.status == "seeding"]
+                    return len(seeding_torrents)
+                case "seed pending":
+                    seed_pending_torrents = [
+                        t for t in _torrents if t.status == "seed pending"
+                    ]
+                    return len(seed_pending_torrents)
+                case "stopped":
+                    stopped_torrents = [t for t in _torrents if t.status == "stopped"]
+                    return len(stopped_torrents)
+                case _:
+                    raise ValueError(f"Invalid state: {status}")
 
     def get_multiple_torrents(self, ids: list[str | int] = None) -> list[Torrent]:
 

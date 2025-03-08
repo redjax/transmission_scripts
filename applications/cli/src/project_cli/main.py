@@ -44,12 +44,12 @@ def cli_launcher(
     Params:
         debug (bool): If `True`, enables debug logging.
     """
-    # log.remove(0)
+    log.remove()
 
     if debug:
         log.add(
-            sys.stderr,
-            format="<blue>{time:YYYY-MM-DD HH:mm:ss}</blue> | <yellow>[{level}]</yellow> | <cyan>{name}.{function}:{line}</cyan> |> {message}",
+            sys.stdout,
+            format="{time:YYYY-MM-DD HH:mm:ss} | [{level}] | {name}.{function}:{line} |> {message}",
             level="DEBUG",
             colorize=True,
         )
@@ -57,8 +57,8 @@ def cli_launcher(
         log.debug("CLI debugging enabled.")
     else:
         log.add(
-            sys.stderr,
-            format="<blue>{time:YYYY-MM-DD HH:mm:ss}</blue> <yellow>[{level}]</yellow> : {message}",
+            sys.stdout,
+            format="{time:YYYY-MM-DD HH:mm:ss} [{level}]: {message}",
             level="INFO",
             colorize=True,
         )
