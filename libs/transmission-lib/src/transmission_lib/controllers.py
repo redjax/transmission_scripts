@@ -179,7 +179,6 @@ class TransmissionRPCController(AbstractContextManager):
                     raise ValueError(f"Invalid state: {status}")
 
     def get_multiple_torrents(self, ids: list[str | int] = None) -> list[Torrent]:
-
         try:
             _torrents: list[Torrent] = self.client.get_torrents(
                 ids=ids, timeout=self.timeout
@@ -210,7 +209,6 @@ class TransmissionRPCController(AbstractContextManager):
     def move_torrent_data(
         self, ids: int | str | list[int] | list[str] = None, dest: str | Path = None
     ) -> bool:
-
         try:
             self._move_or_copy(ids=ids, dest=dest, move=True)
             return True

@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 import typing as t
 
+from cyclopts import App, Parameter
+from loguru import logger as log
 import transmission_lib
 import transmission_rpc
-
-from cyclopts import App, Group, Parameter
-from loguru import logger as log
 
 __all__ = ["transmission_app", "test_transmission_connection", "count_torrents"]
 

@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import json
 
+from loguru import logger as log
 import setup
 import transmission_lib
-
-from loguru import logger as log
-
 
 TRANSMISSION_CONFIG_FILE: str = "configs/ultraseedbox.json"
 
