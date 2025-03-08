@@ -172,6 +172,9 @@ class TransmissionRPCController(AbstractContextManager):
                 case "stopped":
                     stopped_torrents = [t for t in _torrents if t.status == "stopped"]
                     return len(stopped_torrents)
+                case "finished" | "completed":
+                    finished_torrents = [t for t in _torrents if t.done_date]
+                    return len(finished_torrents)
                 case _:
                     raise ValueError(f"Invalid state: {status}")
 

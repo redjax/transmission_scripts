@@ -117,9 +117,17 @@ def count_torrents(
     ] = "/transmission/rpc",
     status: t.Annotated[str, Parameter(["--status"], help="Torrent status")] = "all",
 ):
-    if not status == "all" and status not in transmission_lib.TORRENT_STATES:
+    VALID_TORRENT_STATES: list = transmission_lib.TORRENT_STATES.copy() + [
+        "finished",
+        "completed",
+    ]
+
+    if (
+        not (status == "all" or status == "finished")
+        and status not in VALID_TORRENT_STATES
+    ):
         log.error(
-            f"Invalid torrent status: {status}. Must be one of: {transmission_lib.TORRENT_STATES}"
+            f"Invalid torrent status: {status}. Must be one of: {VALID_TORRENT_STATES}"
         )
         return
 
