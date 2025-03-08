@@ -143,10 +143,100 @@ def count_torrents(
         )
     )
 
-    log.info(f"Connecting to Transmission on host '{transmission_controller.host}'")
+    log.info(
+        f"Counting torrent(s){' with status: ' + status if not status == 'all' else ''} on host '{transmission_controller.host}'"
+    )
 
     num_torrents: int = transmission_controller.count_torrents(status=status)
     if not status == "all":
         log.info(f"Found {num_torrents} {status} torrent(s)")
     else:
         log.info(f"Found {num_torrents} torrent(s)")
+
+
+@transmission_app.command(
+    name=["delete", "rm"], group="transmission", help="Delete torrents."
+)
+def delete_torrents(
+    config_file: t.Annotated[
+        str,
+        Parameter(
+            ["--config-file", "-c"],
+            show_default=True,
+            help="Path to a JSON configuration file for the client",
+        ),
+    ],
+    host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
+    port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
+    username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
+    password: t.Annotated[str, Parameter(["--password"], show_default=True)] = None,
+    protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
+    path: t.Annotated[
+        str, Parameter(["--rpc-path"], show_default=True)
+    ] = "/transmission/rpc",
+    status: t.Annotated[
+        str, Parameter(["--status"], show_default=True, help="Torrent status")
+    ] = "all",
+    delete_data: t.Annotated[
+        bool,
+        Parameter(
+            ["--delete-data", "--rm-data"],
+            show_default=True,
+            help="Delete torrent data (files, etc.)",
+        ),
+    ] = False,
+    dry_run: t.Annotated[
+        bool,
+        Parameter(
+            ["--dry-run"],
+            show_default=True,
+            help="Do a dry run, where no 'live' actions are taken (read-only operations permitted).",
+        ),
+    ] = False,
+):
+    VALID_TORRENT_STATES: list = transmission_lib.TORRENT_STATES.copy() + [
+        "finished",
+        "completed",
+    ]
+
+    if (
+        not (status == "all" or status == "finished")
+        and status not in VALID_TORRENT_STATES
+    ):
+        log.error(
+            f"Invalid torrent status: {status}. Must be one of: {VALID_TORRENT_STATES}"
+        )
+        return
+
+    transmission_controller: transmission_lib.TransmissionRPCController = (
+        return_controller(
+            config_file,
+            host,
+            port,
+            username,
+            password,
+            protocol,
+            path,
+        )
+    )
+
+    log.info(
+        f"Deleting torrent(s){' with status: ' + status if not status == 'all' else ''} on host '{transmission_controller.host}'"
+    )
+
+    delete_torrents: list[transmission_rpc.Torrent] = (
+        transmission_controller.delete_torrent_by_status(
+            status=status, remove_files=delete_data, dry_run=dry_run
+        )
+    )
+
+    if dry_run:
+        log.info(
+            f"Dry run complete. {len(delete_torrents)} torrent(s) would have been deleted."
+        )
+
+        return
+
+    log.info(
+        f"Deleted {len(delete_torrents)}{f' with status: {status}' if not status == 'all' else ''} torrent(s)"
+    )

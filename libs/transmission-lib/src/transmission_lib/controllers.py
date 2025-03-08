@@ -342,15 +342,95 @@ class TransmissionRPCController(AbstractContextManager):
 
             # Assuming `self.client.remove_torrent()` is the method to delete torrents
             # If 'remove_files' is True, pass that flag to remove the data
-            result = self.client.remove_torrent(torrent_id, delete_data=remove_files)
+            try:
+                result = self.client.remove_torrent(
+                    torrent_id, delete_data=remove_files
+                )
 
-            if result:
                 self.logger.info(f"Successfully deleted torrent with ID '{torrent_id}'")
                 return True
-            else:
-                self.logger.error(f"Failed to delete torrent with ID '{torrent_id}'")
+            except Exception as exc:
+                self.logger.error(
+                    f"Failed to delete torrent with ID '{torrent_id}'. Details: {exc}"
+                )
                 return False
+
         except Exception as exc:
             msg = f"({type(exc)}) Error deleting torrent with ID '{torrent_id}'. Details: {exc}"
             self.logger.error(msg)
+            raise exc
+
+    def delete_torrent_by_status(
+        self, status: str, remove_files: bool = False, dry_run: bool = False
+    ):
+        """Remove torrents by status (i.e. 'downloading', 'seeding', etc.)"""
+        if status is None:
+            raise ValueError(
+                "Missing a status argument, e.g. 'downloading', 'seeding', etc."
+            )
+
+        if self.client is None:
+            self.client = self._create_client()
+
+        try:
+            _torrents: list[Torrent] = self.client.get_torrents()
+        except Exception as exc:
+            msg = Exception(f"Unhandled exception getting all torrents. Details: {exc}")
+            self.logger.error(msg)
+
+            raise exc
+
+        if status == "all":
+            log.warning(f"Status 'all' will delete all torrents in any state.")
+
+            delete_torrents = _torrents
+        else:
+            match status.lower():
+                case "check pending":
+                    delete_torrents = [
+                        t for t in _torrents if t.status == "check pending"
+                    ]
+                case "checking":
+                    delete_torrents = [t for t in _torrents if t.status == "checking"]
+                case "downloading":
+                    delete_torrents = [
+                        t for t in _torrents if t.status == "downloading"
+                    ]
+                case "download pending":
+                    delete_torrents = [
+                        t for t in _torrents if t.status == "download pending"
+                    ]
+                case "seeding":
+                    delete_torrents = [t for t in _torrents if t.status == "seeding"]
+                case "seed pending":
+                    delete_torrents = [
+                        t for t in _torrents if t.status == "seed pending"
+                    ]
+                case "stopped":
+                    delete_torrents = [t for t in _torrents if t.status == "stopped"]
+                case "finished" | "completed":
+                    delete_torrents = [t for t in _torrents if t.done_date]
+                case _:
+                    raise ValueError(f"Invalid state: {status}")
+
+        log.debug(
+            f"[{len(delete_torrents)}] queued for deletion. Remove files: {remove_files}."
+        )
+        delete_ids = [t.id for t in delete_torrents]
+
+        if dry_run:
+            log.warning("Dry run enabled, no torrents will be deleted.")
+            print(f"Would delete torrents:\n{[t.name for t in delete_torrents]}")
+
+            return delete_torrents
+
+        log.debug(f"Deleting {len(delete_ids)} torrent(s)")
+        try:
+            self.delete_torrent_by_id(delete_ids, remove_files)
+
+            return delete_torrents
+        except Exception as exc:
+            msg = f"({type(exc)}) Error deleting torrent(s). Details: {exc}"
+            log.error(msg)
+
             raise exc
