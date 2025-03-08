@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./libs/setup-lib/src",
+        "./libs/coreutils-lib/src",
+        "./libs/transmission-lib/src"
+    ]
+}

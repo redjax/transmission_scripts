@@ -210,6 +210,8 @@ site/
 *.json
 !*example*.json
 
+!.vscode/settings.json
+
 .profiling/*
 
 !.profiling/.gitkeep
