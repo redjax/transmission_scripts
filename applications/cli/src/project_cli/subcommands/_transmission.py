@@ -12,6 +12,7 @@ __all__ = [
     "test_transmission_connection",
     "count_torrents",
     "delete_torrents",
+    "list_torrents",
 ]
 
 transmission_app = App(
@@ -68,7 +69,7 @@ def test_transmission_connection(
             show_default=True,
             help="Path to a JSON configuration file for the client",
         ),
-    ],
+    ] = "configs/default.json",
     host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
     port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
     username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
@@ -112,7 +113,7 @@ def count_torrents(
             show_default=True,
             help="Path to a JSON configuration file for the client",
         ),
-    ],
+    ] = "configs/default.json",
     host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
     port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
     username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
@@ -171,7 +172,7 @@ def delete_torrents(
             show_default=True,
             help="Path to a JSON configuration file for the client",
         ),
-    ],
+    ] = "configs/default.json",
     host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
     port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
     username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
@@ -248,3 +249,88 @@ def delete_torrents(
     )
 
     return delete_torrents
+
+
+@transmission_app.command(
+    name=["list", "show"],
+    group="transmission",
+    help="List torrents. Optional status filtering (e.g. 'finished', 'downloading', 'seeding', etc).",
+)
+def list_torrents(
+    config_file: t.Annotated[
+        str,
+        Parameter(
+            ["--config-file", "-c"],
+            show_default=True,
+            help="Path to a JSON configuration file for the client",
+        ),
+    ] = "configs/default.json",
+    host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
+    port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
+    username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
+    password: t.Annotated[str, Parameter(["--password"], show_default=True)] = None,
+    protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
+    path: t.Annotated[
+        str, Parameter(["--rpc-path"], show_default=True)
+    ] = "/transmission/rpc",
+    status: t.Annotated[
+        str, Parameter(["--status"], show_default=True, help="Torrent status")
+    ] = "all",
+    delete_data: t.Annotated[
+        bool,
+        Parameter(
+            ["--delete-data", "--rm-data"],
+            show_default=True,
+            help="Delete torrent data (files, etc.)",
+        ),
+    ] = False,
+) -> list[transmission_rpc.Torrent]:
+    VALID_TORRENT_STATES: list = transmission_lib.TORRENT_STATES.copy() + [
+        "finished",
+        "completed",
+    ]
+
+    if (
+        not (status == "all" or status == "finished")
+        and status not in VALID_TORRENT_STATES
+    ):
+        log.error(
+            f"Invalid torrent status: {status}. Must be one of: {VALID_TORRENT_STATES}"
+        )
+        return []
+
+    transmission_controller: transmission_lib.TransmissionRPCController = (
+        return_controller(
+            config_file,
+            host,
+            port,
+            username,
+            password,
+            protocol,
+            path,
+        )
+    )
+
+    log.info(
+        f"Getting torrent(s){' with status: ' + status if not status == 'all' else ''} from host '{transmission_controller.host}'"
+    )
+
+    torrents: list[transmission_rpc.Torrent] = (
+        transmission_controller.get_all_torrents()
+    )
+
+    if not status == "all":
+        filtered_torrents = [t for t in torrents if t.status == status]
+        torrents = filtered_torrents
+
+    if len(torrents) == 0:
+        log.info(
+            f"No torrents{ ' with status: ' + status if not status == 'all' else ''} found on host '{transmission_controller.host}'"
+        )
+        return []
+
+    log.info(
+        f"Torrent(s) {len(torrents)}{f' with status: {status}' if not status == 'all' else ''}: {[t.name for t in torrents]}"
+    )
+
+    return torrents
