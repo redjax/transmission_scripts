@@ -7,7 +7,12 @@ from loguru import logger as log
 import transmission_lib
 import transmission_rpc
 
-__all__ = ["transmission_app", "test_transmission_connection", "count_torrents"]
+__all__ = [
+    "transmission_app",
+    "test_transmission_connection",
+    "count_torrents",
+    "delete_torrents",
+]
 
 transmission_app = App(
     "transmission", group="transmission", help="Transmission RPC commands."
@@ -194,7 +199,7 @@ def delete_torrents(
             help="Do a dry run, where no 'live' actions are taken (read-only operations permitted).",
         ),
     ] = False,
-):
+) -> list[transmission_rpc.Torrent]:
     VALID_TORRENT_STATES: list = transmission_lib.TORRENT_STATES.copy() + [
         "finished",
         "completed",
@@ -207,7 +212,7 @@ def delete_torrents(
         log.error(
             f"Invalid torrent status: {status}. Must be one of: {VALID_TORRENT_STATES}"
         )
-        return
+        return []
 
     transmission_controller: transmission_lib.TransmissionRPCController = (
         return_controller(
@@ -236,8 +241,10 @@ def delete_torrents(
             f"Dry run complete. {len(delete_torrents)} torrent(s) would have been deleted."
         )
 
-        return
+        return []
 
     log.info(
         f"Deleted {len(delete_torrents)}{f' with status: {status}' if not status == 'all' else ''} torrent(s)"
     )
+
+    return delete_torrents
