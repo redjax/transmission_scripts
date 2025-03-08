@@ -10,6 +10,7 @@ dependencies = [
     "loguru>=0.7.3",
     "msgpack>=1.1.0",
     "setup-lib",
+    "transmission-lib",
     "transmission-rpc>=7.0.11",
 ]
 
@@ -19,6 +20,7 @@ members = ["libs/*", "packages/*", "applications/*"]
 [tool.uv.sources]
 setup-lib = { workspace = true }
 coreutils-lib = { workspace = true }
+transmission-lib = { workspace = true }
 
 [dependency-groups]
 dev = ["nox>=2025.2.9", "ruff>=0.9.10"]

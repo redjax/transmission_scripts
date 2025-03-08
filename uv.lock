@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 members = [
     "coreutils-lib",
     "setup-lib",
+    "transmission-lib",
     "transmission-scripts",
 ]
 
@@ -574,6 +575,17 @@ wheels = [
 ]
 
 [[package]]
+name = "transmission-lib"
+version = "0.1.0"
+source = { editable = "libs/transmission-lib" }
+dependencies = [
+    { name = "transmission-rpc" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "transmission-rpc", specifier = ">=7.0.11" }]
+
+[[package]]
 name = "transmission-rpc"
 version = "7.0.11"
 source = { registry = "https://pypi.org/simple" }
@@ -596,6 +608,7 @@ dependencies = [
     { name = "loguru" },
     { name = "msgpack" },
     { name = "setup-lib" },
+    { name = "transmission-lib" },
     { name = "transmission-rpc" },
 ]
 
@@ -612,6 +625,7 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "msgpack", specifier = ">=1.1.0" },
     { name = "setup-lib", editable = "libs/setup-lib" },
+    { name = "transmission-lib", editable = "libs/transmission-lib" },
     { name = "transmission-rpc", specifier = ">=7.0.11" },
 ]
 
