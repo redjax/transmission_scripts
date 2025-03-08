@@ -5,7 +5,7 @@ import json
 from loguru import logger as log
 import setup
 
-TRANSMISSION_CONFIG_FILE: str = "configs/ultraseedbox.json"
+TRANSMISSION_CONFIG_FILE: str = "configs/default.json"
 
 
 if __name__ == "__main__":

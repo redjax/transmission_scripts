@@ -6,7 +6,7 @@ from loguru import logger as log
 import setup
 import transmission_lib
 
-TRANSMISSION_CONFIG_FILE: str = "configs/ultraseedbox.json"
+TRANSMISSION_CONFIG_FILE: str = "configs/default.json"
 
 
 def load_config(config_file: str) -> dict:
