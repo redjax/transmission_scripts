@@ -18,7 +18,6 @@ def main(config_file: str = "configs/default.json"):
 
 
 if __name__ == "__main__":
-
     setup.setup_loguru_logging(log_level="DEBUG", colorize=True)
     log.info("START count all torrents")
 
