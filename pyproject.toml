@@ -13,6 +13,7 @@ dependencies = [
     "setup-lib",
     "transmission-lib",
     "transmission-rpc>=7.0.11",
+    "tui",
 ]
 
 [tool.uv.workspace]
@@ -23,6 +24,7 @@ setup-lib = { workspace = true }
 coreutils-lib = { workspace = true }
 transmission-lib = { workspace = true }
 cli = { workspace = true }
+tui = { workspace = true }
 
 [dependency-groups]
 dev = ["nox>=2025.2.9", "ruff>=0.9.10"]
