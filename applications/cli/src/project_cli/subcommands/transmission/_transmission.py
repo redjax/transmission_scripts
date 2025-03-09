@@ -7,7 +7,7 @@ from loguru import logger as log
 import transmission_lib
 import transmission_rpc
 
-from .methods import return_controller, test_connection, count, delete
+from .methods import return_controller, test_connection, count, delete, _list
 
 __all__ = [
     "transmission_app",
@@ -191,56 +191,15 @@ def list_torrents(
         str, Parameter(["--status"], show_default=True, help="Torrent status")
     ] = "all",
 ) -> list[transmission_rpc.Torrent]:
-    VALID_TORRENT_STATES: list = transmission_lib.TORRENT_STATES.copy() + [
-        "finished",
-        "completed",
-    ]
-
-    if (
-        not (status == "all" or status == "finished")
-        and status not in VALID_TORRENT_STATES
-    ):
-        log.error(
-            f"Invalid torrent status: {status}. Must be one of: {VALID_TORRENT_STATES}"
-        )
-        return []
-
-    transmission_controller: transmission_lib.TransmissionRPCController = (
-        return_controller(
-            config_file,
-            host,
-            port,
-            username,
-            password,
-            protocol,
-            path,
-        )
-    )
-
-    log.info(
-        f"Getting torrent(s){' with status: ' + status if not status == 'all' else ''} from host '{transmission_controller.host}'"
-    )
-
-    torrents: list[transmission_rpc.Torrent] = (
-        transmission_controller.get_all_torrents()
-    )
-
-    if not status == "all":
-        filtered_torrents = [t for t in torrents if t.status == status]
-        torrents = filtered_torrents
-
-    if status == "finished":
-        filtered_torrents = [t for t in torrents if t.done_date]
-        torrents = filtered_torrents
-
-    if len(torrents) == 0:
-        log.info(
-            f"No torrents{ ' with status: ' + status if not status == 'all' else ''} found on host '{transmission_controller.host}'"
-        )
-        return []
-
-    log.info(
-        f"Torrent(s) {len(torrents)}{f' with status: {status}' if not status == 'all' else ''}: {[t.name for t in torrents]}"
+    torrents = _list(
+        config_file=config_file,
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        protocol=protocol,
+        path=path,
+        status=status,
     )
 
     return torrents

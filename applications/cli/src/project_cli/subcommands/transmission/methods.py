@@ -3,7 +3,7 @@ from loguru import logger as log
 import transmission_lib
 import transmission_rpc
 
-__all__ = ["return_controller", "test_connection", "count", "delete"]
+__all__ = ["return_controller", "test_connection", "count", "delete", "_list"]
 
 
 def return_controller(
@@ -199,3 +199,63 @@ def delete(
     )
 
     return delete_torrents
+
+
+def _list(
+    config_file: str = "configs/default.json",
+    host: str = "127.0.0.1",
+    port: int = 9091,
+    username: str | None = None,
+    password: str | None = None,
+    protocol: str | None = "http",
+    path: str = "/transmission/rpc",
+    status: str = "all",
+) -> list[transmission_rpc.Torrent]:
+    if (
+        not (status == "all" or status == "finished")
+        and status not in transmission_lib.VALID_TORRENT_STATES
+    ):
+        log.error(
+            f"Invalid torrent status: {status}. Must be one of: {transmission_lib.VALID_TORRENT_STATES}"
+        )
+        return []
+
+    transmission_controller: transmission_lib.TransmissionRPCController = (
+        return_controller(
+            config_file,
+            host,
+            port,
+            username,
+            password,
+            protocol,
+            path,
+        )
+    )
+
+    log.debug(
+        f"Getting torrent(s){' with status: ' + status if not status == 'all' else ''} from host '{transmission_controller.host}'"
+    )
+
+    torrents: list[transmission_rpc.Torrent] = (
+        transmission_controller.get_all_torrents()
+    )
+
+    if not status == "all":
+        filtered_torrents = [t for t in torrents if t.status == status]
+        torrents = filtered_torrents
+
+    if status == "finished":
+        filtered_torrents = [t for t in torrents if t.done_date]
+        torrents = filtered_torrents
+
+    if len(torrents) == 0:
+        log.info(
+            f"No torrents{ ' with status: ' + status if not status == 'all' else ''} found on host '{transmission_controller.host}'"
+        )
+        return []
+
+    log.info(
+        f"Torrent(s) {len(torrents)}{f' with status: {status}' if not status == 'all' else ''}: {[t.name for t in torrents]}"
+    )
+
+    return torrents
