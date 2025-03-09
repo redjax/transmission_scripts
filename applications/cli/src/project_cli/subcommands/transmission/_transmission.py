@@ -7,52 +7,19 @@ from loguru import logger as log
 import transmission_lib
 import transmission_rpc
 
+from .methods import return_controller, test_connection
+
 __all__ = [
     "transmission_app",
     "test_transmission_connection",
     "count_torrents",
     "delete_torrents",
+    "list_torrents",
 ]
 
 transmission_app = App(
     "transmission", group="transmission", help="Transmission RPC commands."
 )
-
-
-def return_controller(
-    config_file: str,
-    host: str,
-    port: int,
-    username: str,
-    password: str,
-    protocol: str,
-    path: str,
-) -> transmission_lib.TransmissionRPCController:
-    if config_file:
-        log.debug(f"Config file: {config_file}")
-
-        transmission_settings: transmission_lib.TransmissionClientSettings = (
-            transmission_lib.get_transmission_settings(config_file)
-        )
-    else:
-        transmission_settings: transmission_lib.TransmissionClientSettings = (
-            transmission_lib.TransmissionClientSettings(
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-                protocol=protocol,
-                path=path,
-            )
-        )
-
-    transmission_controller: transmission_lib.TransmissionRPCController = (
-        transmission_lib.get_transmission_controller(
-            transmission_settings=transmission_settings
-        )
-    )
-
-    return transmission_controller
 
 
 @transmission_app.command(
@@ -68,7 +35,7 @@ def test_transmission_connection(
             show_default=True,
             help="Path to a JSON configuration file for the client",
         ),
-    ],
+    ] = "configs/default.json",
     host: t.Annotated[str, Parameter(["--host"], show_default=True)] = "127.0.0.1",
     port: t.Annotated[int, Parameter(["--port"], show_default=True)] = 9091,
     username: t.Annotated[str, Parameter(["--username"], show_default=True)] = None,
@@ -76,27 +43,19 @@ def test_transmission_connection(
     protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
     path: t.Annotated[
         str, Parameter(["--rpc-path"], show_default=True)
-    ] = "/transmission/rpc",
+    ] = "/transmission/rpc/",
 ):
-    transmission_controller: transmission_lib.TransmissionRPCController = (
-        return_controller(
-            config_file,
-            host,
-            port,
-            username,
-            password,
-            protocol,
-            path,
-        )
+    connect_success = test_connection(
+        config_file=config_file,
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        protocol=protocol,
+        path=path,
     )
 
-    log.info(f"Connecting to Transmission on host '{transmission_controller.host}'")
-    connect_success = transmission_controller.test_connection()
-
-    if connect_success:
-        log.success("Connection successful.")
-    else:
-        log.error("Connection failed.")
+    return connect_success
 
 
 @transmission_app.command(
@@ -120,7 +79,7 @@ def count_torrents(
     protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
     path: t.Annotated[
         str, Parameter(["--rpc-path"], show_default=True)
-    ] = "/transmission/rpc",
+    ] = "/transmission/rpc/",
     status: t.Annotated[str, Parameter(["--status"], help="Torrent status")] = "all",
 ):
 
@@ -175,7 +134,7 @@ def delete_torrents(
     protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
     path: t.Annotated[
         str, Parameter(["--rpc-path"], show_default=True)
-    ] = "/transmission/rpc",
+    ] = "/transmission/rpc/",
     status: t.Annotated[
         str, Parameter(["--status"], show_default=True, help="Torrent status")
     ] = "all",
@@ -262,7 +221,7 @@ def list_torrents(
     protocol: t.Annotated[str, Parameter(["--protocol"], show_default=True)] = "http",
     path: t.Annotated[
         str, Parameter(["--rpc-path"], show_default=True)
-    ] = "/transmission/rpc",
+    ] = "/transmission/rpc/",
     status: t.Annotated[
         str, Parameter(["--status"], show_default=True, help="Torrent status")
     ] = "all",
