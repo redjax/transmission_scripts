@@ -26,3 +26,6 @@ cli = { workspace = true }
 
 [dependency-groups]
 dev = ["nox>=2025.2.9", "ruff>=0.9.10"]
+
+[tool.setuptools]
+py-modules = []

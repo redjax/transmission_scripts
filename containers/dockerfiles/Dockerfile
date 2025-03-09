@@ -26,13 +26,12 @@ WORKDIR /project
 
 COPY --from=base /project /project
 
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock README.md cli.py ./
 
 ## Copy monorepo domains
 COPY applications/ applications/
-COPY packages/ packages/
+COPY libs/ libs/
 COPY scripts/ scripts/
-COPY src/ src/
 
 FROM stage AS build
 
