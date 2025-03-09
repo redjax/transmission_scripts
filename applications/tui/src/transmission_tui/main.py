@@ -9,6 +9,7 @@ from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, DataTable, Button, Static
+from textual.containers import Horizontal, HorizontalGroup
 from textual.containers import Container, VerticalScroll
 from textual.events import Key
 
@@ -49,9 +50,11 @@ class TransmissionTUI(App):
         yield Footer()
         yield Container(
             DataTable(id="torrent_table"),
-            Button("Refresh", id="refresh"),
-            Button("Show Debug", id="debug"),
-            Button("Quit", id="quit", variant="error"),
+            Horizontal(
+                Button("Refresh", id="refresh"),
+                Button("Show Debug", id="debug"),
+                Button("Quit", id="quit", variant="error"),
+            ),
         )
 
     def on_mount(self) -> None:
@@ -99,6 +102,8 @@ class TransmissionTUI(App):
             self.refresh_torrents()
         elif event.button.id == "debug":
             self.push_screen(DebugScreen(self.settings))
+        elif event.button.id == "quit":
+            self.exit()
 
     def on_key(self, event: Key) -> None:
         """Handle key events."""
