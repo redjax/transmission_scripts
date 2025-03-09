@@ -10,7 +10,7 @@ class TorrentsList(SelectionList):
     """Class to mount torrents in a vertical scrolling table, where each row is a torrent."""
 
     def compose(self) -> ComposeResult:
-        yield Container(DataTable(id="torrent_table"))
+        yield SelectionList[int]()
 
 
 class TransmissionApp(App):
