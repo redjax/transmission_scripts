@@ -91,6 +91,7 @@ def count_torrents(
         password=password,
         protocol=protocol,
         path=path,
+        status=status
     )
 
     if not status == "all":
