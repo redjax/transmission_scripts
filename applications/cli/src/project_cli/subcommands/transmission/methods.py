@@ -2,7 +2,7 @@ from loguru import logger as log
 
 import transmission_lib
 
-__all__ = ["return_controller", "test_connection"]
+__all__ = ["return_controller", "test_connection", "count"]
 
 
 def return_controller(
@@ -77,3 +77,45 @@ def test_connection(
         log.error("Connection failed.")
 
     return connect_success
+
+
+def count(
+    config_file: str = "configs/default.json",
+    host: str = "127.0.0.1",
+    port: int = 9091,
+    username: str | None = None,
+    password: str | None = None,
+    protocol: str = "http",
+    path: str = "/transmission/rpc/",
+    status: str = "all",
+):
+
+    if (
+        not (status == "all" or status == "finished")
+        and status not in transmission_lib.VALID_TORRENT_STATES
+    ):
+        log.error(
+            f"Invalid torrent status: {status}. Must be one of: {transmission_lib.VALID_TORRENT_STATES}"
+        )
+        return
+
+    transmission_controller: transmission_lib.TransmissionRPCController = (
+        return_controller(
+            config_file,
+            host,
+            port,
+            username,
+            password,
+            protocol,
+            path,
+        )
+    )
+
+    log.debug(
+        f"Counting torrent(s){' with status: ' + status if not status == 'all' else ''} on host '{transmission_controller.host}'"
+    )
+
+    num_torrents: int = transmission_controller.count_torrents(status=status)
+    log.debug(f"[STATUS: {status}, COUNT: {num_torrents}]")
+
+    return num_torrents
