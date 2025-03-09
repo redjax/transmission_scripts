@@ -191,15 +191,19 @@ def list_torrents(
         str, Parameter(["--status"], show_default=True, help="Torrent status")
     ] = "all",
 ) -> list[transmission_rpc.Torrent]:
-    torrents = _list(
-        config_file=config_file,
-        host=host,
-        port=port,
-        username=username,
-        password=password,
-        protocol=protocol,
-        path=path,
-        status=status,
-    )
+    try:
+        torrents = _list(
+            config_file=config_file,
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            protocol=protocol,
+            path=path,
+            status=status,
+        )
 
-    return torrents
+        return torrents
+    except Exception as e:
+        log.error(f"Error listing torrent(s): {e}")
+        return []
