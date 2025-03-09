@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["TORRENT_STATES"]
+__all__ = ["TORRENT_STATES", "VALID_TORRENT_STATES"]
 
 TORRENT_STATES: list[str] = [
     "check pending",
@@ -10,4 +10,9 @@ TORRENT_STATES: list[str] = [
     "seeding",
     "seed pending",
     "stopped",
+]
+
+VALID_TORRENT_STATES: list[str] = TORRENT_STATES.copy() + [
+    "finished",
+    "completed",
 ]
