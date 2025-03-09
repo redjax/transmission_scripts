@@ -7,14 +7,13 @@ from loguru import logger as log
 import transmission_lib
 import transmission_rpc
 
-from .methods import return_controller, test_connection, count
+from .methods import return_controller, test_connection, count, delete
 
 __all__ = [
     "transmission_app",
     "test_transmission_connection",
     "count_torrents",
     "delete_torrents",
-    "list_torrents",
     "list_torrents",
 ]
 
@@ -122,6 +121,7 @@ def delete_torrents(
     path: t.Annotated[
         str, Parameter(["--rpc-path"], show_default=True)
     ] = "/transmission/rpc/",
+    torrent_id: t.Annotated[int, Parameter(["--id"], show_default=True)] | None = None,
     status: t.Annotated[
         str, Parameter(["--status"], show_default=True, help="Torrent status")
     ] = "all",
@@ -142,49 +142,27 @@ def delete_torrents(
         ),
     ] = False,
 ) -> list[transmission_rpc.Torrent]:
-    if (
-        not (status == "all" or status == "finished")
-        and status not in transmission_lib.VALID_TORRENT_STATES
-    ):
-        log.error(
-            f"Invalid torrent status: {status}. Must be one of: {transmission_lib.VALID_TORRENT_STATES}"
+    try:
+        deleted_torrents: list[transmission_rpc.Torrent] = delete(
+            config_file=config_file,
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            protocol=protocol,
+            path=path,
+            torrent_id=torrent_id,
+            status=status,
+            delete_data=delete_data,
+            dry_run=dry_run,
         )
+
+        log.info(f"Deleted torrents ({len(deleted_torrents)}): {deleted_torrents}")
+
+        return deleted_torrents
+    except Exception as e:
+        log.error(f"Error deleting torrent(s): {e}")
         return []
-
-    transmission_controller: transmission_lib.TransmissionRPCController = (
-        return_controller(
-            config_file,
-            host,
-            port,
-            username,
-            password,
-            protocol,
-            path,
-        )
-    )
-
-    log.info(
-        f"Deleting torrent(s){' with status: ' + status if not status == 'all' else ''} on host '{transmission_controller.host}'"
-    )
-
-    delete_torrents: list[transmission_rpc.Torrent] = (
-        transmission_controller.delete_torrent_by_status(
-            status=status, remove_files=delete_data, dry_run=dry_run
-        )
-    )
-
-    if dry_run:
-        log.info(
-            f"Dry run complete. {len(delete_torrents)} torrent(s) would have been deleted."
-        )
-
-        return []
-
-    log.info(
-        f"Deleted {len(delete_torrents)}{f' with status: {status}' if not status == 'all' else ''} torrent(s)"
-    )
-
-    return delete_torrents
 
 
 @transmission_app.command(

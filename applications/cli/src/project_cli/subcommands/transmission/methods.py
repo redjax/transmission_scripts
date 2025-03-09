@@ -1,8 +1,9 @@
 from loguru import logger as log
 
 import transmission_lib
+import transmission_rpc
 
-__all__ = ["return_controller", "test_connection", "count"]
+__all__ = ["return_controller", "test_connection", "count", "delete"]
 
 
 def return_controller(
@@ -119,3 +120,82 @@ def count(
     log.debug(f"[STATUS: {status}, COUNT: {num_torrents}]")
 
     return num_torrents
+
+
+def delete(
+    config_file: str = "configs/default.json",
+    host: str = "127.0.0.1",
+    port: int = 9091,
+    username: str | None = None,
+    password: str | None = None,
+    protocol: str = "http",
+    path: str = "/transmission/rpc/",
+    torrent_id: int | None = None,
+    status: str = "all",
+    delete_data: bool = False,
+    dry_run: bool = False,
+) -> list[transmission_rpc.Torrent]:
+    if not torrent_id:
+        if (
+            not (status == "all" or status == "finished")
+            and status not in transmission_lib.VALID_TORRENT_STATES
+        ):
+            log.error(
+                f"Invalid torrent status: {status}. Must be one of: {transmission_lib.VALID_TORRENT_STATES}"
+            )
+            return []
+
+    transmission_controller: transmission_lib.TransmissionRPCController = (
+        return_controller(
+            config_file,
+            host,
+            port,
+            username,
+            password,
+            protocol,
+            path,
+        )
+    )
+
+    if torrent_id:
+        log.debug(
+            f"Deleting torrent with ID '{torrent_id}' on host '{transmission_controller.host}'"
+        )
+
+        if dry_run:
+            log.info(
+                f"Dry run complete. {len(delete_torrents)} torrent(s) would have been deleted."
+            )
+
+            return []
+
+        delete_torrents: list[transmission_rpc.Torrent] = (
+            transmission_controller.delete_torrent_by_id(
+                torrent_id=torrent_id, remove_files=delete_data
+            )
+        )
+
+        return delete_torrents
+
+    log.debug(
+        f"Deleting torrent(s){' with status: ' + status if not status == 'all' else ''} on host '{transmission_controller.host}'"
+    )
+
+    if dry_run:
+        log.info(
+            f"Dry run complete. {len(delete_torrents)} torrent(s) would have been deleted."
+        )
+
+        return []
+
+    delete_torrents: list[transmission_rpc.Torrent] = (
+        transmission_controller.delete_torrent_by_status(
+            status=status, remove_files=delete_data, dry_run=dry_run
+        )
+    )
+
+    log.debug(
+        f"Deleted {len(delete_torrents)}{f' with status: {status}' if not status == 'all' else ''} torrent(s)"
+    )
+
+    return delete_torrents
